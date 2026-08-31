@@ -1,0 +1,4 @@
+interface:
+  display_name: "Port Game Mode"
+  short_description: "Port an open-source browser game to a Flaunch Game Mode"
+  default_prompt: "Use $port-game-mode to port this open-source game into a Flaunch Game Mode and verify it with the QA harness."

@@ -187,6 +187,10 @@ GameManager.prototype.move = function (direction) {
     }
 
     this.actuate();
+
+    // The Game Mode scoring seam: after a swipe that actually moved tiles, notify a consumer
+    // (exposed as this.onMove) with the batched score delta for this move.
+    if (this.onMove) this.onMove(this.score);
   }
 };
 

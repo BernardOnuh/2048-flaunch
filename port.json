@@ -1,0 +1,11 @@
+{
+  "name": "2048",
+  "upstream": {
+    "repo": "https://github.com/gabrielecirulli/2048",
+    "author": "gabrielecirulli",
+    "commit": "478b6ec346e3787f589e4af751378d06ded4cbbc",
+    "license": "MIT"
+  },
+  "portedAt": "2026-08-31T00:00:00Z",
+  "sdk": "0.2.0"
+}

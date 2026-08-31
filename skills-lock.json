@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "port-game-mode": {
+      "source": "flayerlabs/flaunch-skills",
+      "sourceType": "github",
+      "skillPath": "skills/advanced/port-game-mode/SKILL.md",
+      "computedHash": "c4006df0a9a1c2290da3a38f250c0ee28c117a815b00a7c39638ec465b084475"
+    }
+  }
+}
