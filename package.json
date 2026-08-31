@@ -11,7 +11,8 @@
     "test": "npm run check:rules && vitest run",
     "typecheck": "tsc --noEmit",
     "check:rules": "gamemode check src/game/rules.ts",
-    "qa": "node tools/qa-gamemode.mjs"
+    "qa": "node tools/qa-gamemode.mjs",
+    "sites": "node tools/build-sites.mjs"
   },
   "repository": {
     "type": "git",
