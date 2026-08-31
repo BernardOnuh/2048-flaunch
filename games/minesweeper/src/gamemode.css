@@ -1,13 +1,14 @@
-/* Game Mode framing for 2048 — styled to match the game's warm tile palette (#faf8ef / #bbada0). */
+/* Game Mode framing for Minesweeper — pink-and-white scheme. */
 
 :root {
-  --gm-bg: #faf8ef;
-  --gm-ink: #776e65;
-  --gm-ink-soft: #a09a91;
-  --gm-panel: #bbada0;
-  --gm-gold: #f2b53a;
-  --gm-gold-ink: #8e6b2f;
-  --gm-green: #6ec96e;
+  --gm-bg: #fff5f8;
+  --gm-ink: #b23a5a;
+  --gm-ink-soft: #d99bb0;
+  --gm-panel: #ffdbe6;
+  --gm-pink: #ff5f8f;
+  --gm-pink-deep: #e63e75;
+  --gm-pink-ink: #a3244f;
+  --gm-green: #5ec98a;
 }
 
 /* --- layout: coin card on the right ------------------------------------------------- */
@@ -36,7 +37,7 @@
   font-weight: bold;
   font-size: 15px;
 }
-.gm-practice { color: #b87a2f; letter-spacing: .04em; }
+.gm-practice { color: var(--gm-pink-deep); letter-spacing: .04em; }
 .gm-practice.gone { display: none; }
 .gm-tipoff { color: var(--gm-ink-soft); }
 
@@ -46,7 +47,7 @@
   top: 38%;
   left: 50%;
   transform: translate(-50%, 0);
-  background: rgba(242,181,58,.92);
+  background: rgba(255,95,143,.94);
   color: #fff;
   font-family: "Clear Sans", Arial, sans-serif;
   font-weight: bold;
@@ -73,40 +74,40 @@
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  border: 2px solid #8e6b2f;
+  border: 2px solid var(--gm-pink-ink);
   box-shadow: 0 2px 8px rgba(0,0,0,.25);
   z-index: 5;
   object-fit: cover;
 }
 
-/* --- coin panel (restyled to 2048 tones) -------------------------------------------- */
+/* --- coin panel (pink & white tones) ------------------------------------------------ */
 #coin-panel {
-  background: #edcfa4;
-  border: 2px solid #8e6b2f;
+  background: #ffffff;
+  border: 2px solid var(--gm-pink);
   border-radius: 10px;
   padding: 12px;
-  color: #5f4a22;
+  color: var(--gm-ink);
   font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
-  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  box-shadow: 0 6px 20px rgba(255,95,143,.25);
 }
 #coin-panel .cp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-#coin-panel .cp-coin { width: 46px; height: 46px; border-radius: 50%; border: 2px solid #8e6b2f; }
-#coin-panel .cp-meta b { font-size: 20px; color: #4c3a1a; display: block; }
+#coin-panel .cp-coin { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--gm-pink); }
+#coin-panel .cp-meta b { font-size: 20px; color: var(--gm-pink-ink); display: block; }
 #coin-panel .cp-meta span { font-size: 12px; opacity: .8; }
-#coin-panel .cp-window { margin-left: auto; font-weight: bold; font-size: 13px; color: #7a3c12; white-space: nowrap; }
+#coin-panel .cp-window { margin-left: auto; font-weight: bold; font-size: 13px; color: var(--gm-pink-deep); white-space: nowrap; }
 #coin-panel .cp-window.closed { color: #b00020; }
-#coin-panel .cp-chart { width: 100%; height: 76px; background: #3a3226; border-radius: 8px; margin-bottom: 8px; display: block; }
+#coin-panel .cp-chart { width: 100%; height: 76px; background: #fff0f5; border-radius: 8px; margin-bottom: 8px; display: block; }
 #coin-panel .cp-standings { font-size: 13px; margin: 8px 0; }
 #coin-panel .cp-row { display: flex; gap: 8px; align-items: center; padding: 3px 0; }
-#coin-panel .cp-row.you { color: #1a6b1a; font-weight: bold; }
+#coin-panel .cp-row.you { color: var(--gm-pink-deep); font-weight: bold; }
 #coin-panel .cp-row span { width: 22px; opacity: .7; }
 #coin-panel .cp-row b { flex: 1; }
 #coin-panel .cp-row em { font-style: normal; font-weight: bold; }
-#coin-panel .cp-feed { font-size: 12px; color: #5f4a22; margin: 6px 0; }
+#coin-panel .cp-feed { font-size: 12px; color: var(--gm-ink); margin: 6px 0; }
 #coin-panel .cp-feed-item { padding: 2px 0; }
-#coin-panel .cp-feed-item.mine { color: #1a6b1a; font-weight: bold; }
+#coin-panel .cp-feed-item.mine { color: var(--gm-pink-deep); font-weight: bold; }
 #coin-panel .cp-allocrow { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 14px; }
-#coin-panel .cp-allocrow b { font-size: 22px; color: #2d7d2d; }
+#coin-panel .cp-allocrow b { font-size: 22px; color: var(--gm-pink-deep); }
 #coin-panel .cp-note { font-size: 12px; opacity: .85; margin: 6px 0; }
 #coin-panel .cp-buy {
   width: 100%;
@@ -115,21 +116,21 @@
   font-weight: bold;
   border: 0;
   border-radius: 8px;
-  background: #4c3a1a;
+  background: var(--gm-pink);
   color: #fff;
   cursor: pointer;
   transition: transform .06s ease;
 }
-#coin-panel .cp-buy:disabled { background: #9c9168; color: #efe9dc; cursor: default; }
+#coin-panel .cp-buy:disabled { background: #ffd3e1; color: #fff; cursor: default; }
 #coin-panel .cp-buy.pulse { animation: gm-pulse 1.2s ease-in-out infinite; }
-@keyframes gm-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(76,58,26,.5); } 50% { box-shadow: 0 0 0 8px rgba(76,58,26,0); } }
+@keyframes gm-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,95,143,.5); } 50% { box-shadow: 0 0 0 8px rgba(255,95,143,0); } }
 #coin-panel .cp-hold { font-size: 13px; margin-top: 6px; font-weight: bold; }
 
 /* --- tutorial ----------------------------------------------------------------------- */
 .gm-tutorial {
   position: fixed;
   inset: 0;
-  background: rgba(250,248,239,.94);
+  background: rgba(255,245,248,.95);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -140,12 +141,12 @@
   font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
 }
 .gm-tutorial-body { max-width: 460px; font-size: 20px; line-height: 1.5; color: var(--gm-ink); text-align: center; }
-.gm-tutorial-body b { color: #8e6b2f; }
+.gm-tutorial-body b { color: var(--gm-pink-deep); }
 .gm-tutorial-next {
   padding: 12px 26px;
   font-size: 18px;
   font-weight: bold;
-  background: #4c3a1a;
+  background: var(--gm-pink);
   color: #fff;
   border: 0;
   border-radius: 8px;
@@ -158,9 +159,9 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 2px solid #8e6b2f;
-  background: #ede0c8;
-  color: #5f4a22;
+  border: 2px solid var(--gm-pink);
+  background: #fff0f5;
+  color: var(--gm-pink-deep);
   font-weight: bold;
   cursor: pointer;
   z-index: 40;
@@ -171,7 +172,7 @@
 .gm-endscreen {
   position: fixed;
   inset: 0;
-  background: rgba(250,248,239,.95);
+  background: rgba(255,245,248,.96);
   z-index: 90;
   display: flex;
   align-items: center;
@@ -181,22 +182,22 @@
 }
 .gm-endscreen[hidden] { display: none; }
 .gm-end-card {
-  background: #edcfa4;
-  border: 2px solid #8e6b2f;
+  background: #ffffff;
+  border: 2px solid var(--gm-pink);
   border-radius: 12px;
   padding: 26px 30px;
   max-width: 420px;
   width: 100%;
-  color: #5f4a22;
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  color: var(--gm-ink);
+  box-shadow: 0 10px 30px rgba(255,95,143,.25);
 }
-.gm-end-card h2 { margin: 0 0 12px; text-align: center; color: #4c3a1a; }
+.gm-end-card h2 { margin: 0 0 12px; text-align: center; color: var(--gm-pink-ink); }
 .gm-end-score { text-align: center; margin-bottom: 14px; }
-.gm-end-scorenum { font-size: 44px; font-weight: bold; color: #2d7d2d; }
+.gm-end-scorenum { font-size: 44px; font-weight: bold; color: var(--gm-pink-deep); }
 .gm-end-sub { opacity: .85; }
 .gm-end-hold { margin-top: 6px; font-weight: bold; }
 .gm-end-lb { font-size: 15px; margin: 14px 0; }
-.gm-end-lb .cp-row.you { color: #1a6b1a; font-weight: bold; }
+.gm-end-lb .cp-row.you { color: var(--gm-pink-deep); font-weight: bold; }
 .gm-end-buy {
   width: 100%;
   padding: 14px;
@@ -204,7 +205,7 @@
   font-weight: bold;
   border: 0;
   border-radius: 8px;
-  background: #4c3a1a;
+  background: var(--gm-pink);
   color: #fff;
   cursor: pointer;
 }

@@ -9,18 +9,21 @@ html, body {
 body {
   display: flex;
   text-align: center;
+  background: linear-gradient(180deg, #ffe4ec 0%, #fff0f5 45%, #ffffff 100%);
+  background-attachment: fixed;
 }
 
 .game-board {
   padding: 3px;
-  border: 3px solid #ddd;
+  border: 3px solid #ffb3c8;
   border-radius: 4px;
   margin: auto;
+  background: #fff5f8;
 }
 .header {
   padding: 2px 5px;
   margin: 0 -3px 3px;
-  border-bottom: 1px solid #d6d6d6;
+  border-bottom: 1px solid #ffd7e3;
 }
 .counter,
 .timer {
@@ -30,7 +33,7 @@ body {
   text-align: left;
   float: left;
   font-size: 1.5em;
-  color: #666;
+  color: #d65a83;
 }
 .timer {
   float: right;
@@ -54,10 +57,10 @@ body {
   padding: 14px;
   margin: 0 6px 3px;
   line-height: 34px;
-  border: 1px solid #aaa;
+  border: 1px solid #ffb3c8;
   border-radius: 50%;
-  color: #666;
-  background: #eee;
+  color: #d65a83;
+  background: #ffe6ee;
 }
 .game-board button:before,
 .game-board button:after {
@@ -105,14 +108,14 @@ body {
 }
 
 .board td {
-  color: green;
+  color: #b23a5a;
   font-weight: bold;
   width: 15px;
   height: 15px;
   margin: 1px;
   font-size: .9em;
   line-height: 15px;
-  border: 1px #ccc dotted;
+  border: 1px #ffc4d6 dotted;
   border-radius: 10%;
   cursor: default;
 }
@@ -124,18 +127,18 @@ body {
 }
 
 .board .hidden {
-  background: #eee;
+  background: #ffd7e3;
   animation-name: example;
   animation-duration: 0.7s;
   animation-delay: -0.2s;
 }
 .board .hidden:hover {
-  background: #ccc;
+  background: #ffb3c8;
 }
 
 .board .mine,
 .board .mine:hover {
-  background: sandybrown;
+  background: #e63e75;
 }
 .board .mine:after {
   content: "o";
@@ -144,14 +147,14 @@ body {
 }
 .board .mine.last {
   color: white;
-  background: red;
+  background: #d81b60;
 }
 
 .board .marked,
 .board .marked:hover,
 .board .open,
 .board .open:hover {
-  background: deepskyblue;
+  background: #fff0f5;
 }
 
 .board .marked:after {
@@ -161,8 +164,7 @@ body {
   content: "?";
 }
 
-.board .color-1 { color: blue; }
-.board .color-2 { color: green; }
-.board .color-3 { color: red; }
-.board .color-4 { color: black; }
-.board .color-5 { color: sandybrown; }
+.board .color-1 { color: #e63e75; }
+.board .color-2 { color: #b23a5a; }
+.board .color-3 { color: #a3244f; }
+.board .color-4 { color: #7a1f3c; }
