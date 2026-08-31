@@ -6,3 +6,5 @@ qa-1-lobby.png
 qa-2-midround.png
 qa-3-end.png
 .DS_Store
+pnpm-workspace.yaml
+*.zip
