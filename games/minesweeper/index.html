@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minesweeper · $MINES launch</title>
+<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="/src/gamemode.css"></head>
+<body>
+  <div class="game-board">
+    <div class="header">
+      <select disabled title="The launch plays a fixed 16×16 board">
+        <option value="16,16,40" selected>Intermediate · 16×16</option>
+      </select>
+    </div>
+    <div class="header">
+      <div class="counter"></div>
+      <button type="button"></button>
+      <div class="timer"></div>
+    </div>
+    <table class="board">
+      <tbody id="boardBody"></tbody>
+    </table>
+  </div>
+</body>
+<script src="app.js"></script>
+<script type="module" src="/src/play.ts"></script>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "minesweeper-flaunch",
+  "version": "1.0.0",
+  "description": "Minesweeper ported to a Flaunch Game Mode — reveal safe cells to earn allocation in a coin launch.",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "npm run check:rules && vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:rules": "gamemode check src/game/rules.ts",
+    "qa": "node tools/qa-gamemode.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@flayerlabs/gamemode-client": "^0.3.1",
+    "@flayerlabs/gamemode-spec": "^0.3.1"
+  },
+  "devDependencies": {
+    "@flayerlabs/gamemode-cli": "^0.3.1",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0",
+    "playwright": "^1.0.0"
+  }
+}

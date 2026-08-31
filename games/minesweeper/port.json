@@ -1,0 +1,11 @@
+{
+  "name": "Minesweeper",
+  "upstream": {
+    "repo": "https://github.com/PitPik/minesweeper",
+    "author": "PitPik",
+    "commit": "62c490102a417d8887f79cd627a1f17686a65a4f",
+    "license": "MIT"
+  },
+  "portedAt": "2026-08-31",
+  "sdk": "0.3.1"
+}
