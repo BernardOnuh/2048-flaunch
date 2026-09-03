@@ -1,8 +1,17 @@
 /* Trading Simulator · dark-mode neon scheme */
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
   height: 100%;
   margin: 0;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 .gm-root {
@@ -297,4 +306,108 @@ html, body {
 
 .stat-row b {
   color: #3ddc84;
+}
+
+/* ---------------------------------------------------------------------------
+   Mobile-friendly layout
+   Stack the chart, trading controls and coin panel vertically, make buttons and
+   inputs thumb-sized, and remove reliance on hover for a touch-first viewport.
+   --------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  /* Reflow body into a vertical stack so we can order the panels under the chart. */
+  body.gm-root {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .dodge-stage {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 10px 24px;
+    min-height: 0;
+  }
+
+  /* Chart fills the width, keeps its 2:1 ratio, and stays touch-safe. */
+  .dodge-canvas {
+    max-width: 100%;
+    border-radius: 12px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .dodge-hint {
+    font-size: 12.5px;
+    padding: 0 6px;
+  }
+
+  .dodge-title { font-size: 22px; }
+  .dodge-score { font-size: 15px; }
+
+  /* Turn the fixed side/control panels into stacked, full-width cards. */
+  .gm-side,
+  .trading-panel {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
+
+  .trading-panel {
+    order: 2;
+    padding: 14px 10px;
+  }
+  .gm-side { order: 3; padding: 0 10px 20px; }
+  #coin-panel { border-radius: 12px; margin-bottom: 0; }
+
+  /* Bigger, easier-to-tap trading buttons. */
+  .trading-buy-btn,
+  .trading-sell-btn {
+    padding: 17px 14px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  /* Scrollable, roomier order-size row. */
+  .order-size {
+    gap: 14px;
+    font-size: 16px;
+  }
+  .qty-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  /* Larger SL/TP inputs for thumbs. */
+  .sl-tp-controls input {
+    padding: 10px 8px;
+    font-size: 15px;
+  }
+
+  /* Roomier feed + standings rows. */
+  #coin-panel .cp-row { padding: 6px 0; }
+  #coin-panel .cp-buy { padding: 15px; font-size: 17px; }
+  #coin-panel .cp-feed-item { padding: 4px 0; }
+}
+
+/* Extra-small phones (~ up to 380px) */
+@media (max-width: 380px) {
+  .dodge-title { letter-spacing: .08em; }
+  .trading-price b { font-size: 22px; }
+  .trading-info,
+  #coin-panel .cp-allocrow { font-size: 13px; }
+}
+
+/* -- Reduced motion for accessibility ------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  #coin-panel .cp-buy.pulse,
+  .trading-buy-btn,
+  .trading-sell-btn { animation: none !important; }
+  .gm-award { animation-duration: .4s; }
 }

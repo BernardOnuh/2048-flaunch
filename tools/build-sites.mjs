@@ -1,9 +1,10 @@
 /**
  * Assemble a single static site for Vercel from the three Game Mode ports.
  *
- * Builds 2048 (root), Minesweeper and Candle Dodger, then collects each dist
- * under the root dist/ as /2048, /minesweeper, /candledodger with a hub at the
- * top level (dist/index.html).
+ * Builds 2048, Minesweeper and Candle Dodger, then collects each dist under
+ * the root dist/ as /2048 and /minesweeper, and serves Candle Dodger's game
+ * directly at the apex (dist/index.html) so https://candledodger.vercel.app/
+ * is the playable game. A small hub is kept at /hub.html for navigation.
  *
  * Run: node tools/build-sites.mjs
  */
@@ -23,40 +24,43 @@ const games = [
 
 console.log('# Building game modes ...');
 const tmp2048 = join(root, '.build-2048');
+const tmpCD = join(root, 'games', 'candledodger', '.build-candledodger');
 rmSync(dist, { recursive: true, force: true });
 rmSync(tmp2048, { recursive: true, force: true });
+rmSync(tmpCD, { recursive: true, force: true });
 
 for (const g of games) {
   if (g.name === '2048') {
     console.log('\n## 2048');
     // 2048 builds into root/dist by default; point it at a temp dir so the
-    // assembled root/dist can hold all games + the hub page.
+    // assembled root/dist can hold all games + the apex game.
     execSync('npx vite build --outDir .build-2048', { cwd: g.dir, stdio: 'inherit' });
     continue;
   }
   console.log(`\n## ${g.name}`);
-  execSync('npm run build', { cwd: g.dir, stdio: 'inherit' });
+  // Build into a temp dir first so we can place candledodger at the apex.
+  execSync(`npx vite build --outDir ${g.name === 'candledodger' ? tmpCD : 'dist'}`, {
+    cwd: g.dir,
+    stdio: 'inherit',
+  });
 }
 
 console.log('\n# Assembling static site ...');
-mkdirSync(dist, { recursive: true });
+mkdirSync(join(dist, '2048'), { recursive: true });
+mkdirSync(join(dist, 'minesweeper'), { recursive: true });
 
-const entries = [
-  { name: '2048',        src: tmp2048 },
-  { name: 'minesweeper', src: join(root, 'games', 'minesweeper', 'dist') },
-  { name: 'candledodger', src: join(root, 'games', 'candledodger', 'dist') },
-];
+// 2048 and minesweeper keep their subpaths so links/formats don't break.
+cpSync(tmp2048, join(dist, '2048'), { recursive: true });
+cpSync(join(root, 'games', 'minesweeper', 'dist'), join(dist, 'minesweeper'), { recursive: true });
 
-for (const { name, src } of entries) {
-  if (!existsSync(src)) throw new Error(`missing build for ${name}: ${src}`);
-  cpSync(src, join(dist, name), { recursive: true });
-}
+// Candle Dodger serves at the apex so https://candledodger.vercel.app/ is the game.
+cpSync(tmpCD, dist, { recursive: true });
 
 rmSync(tmp2048, { recursive: true, force: true });
-
-console.log('# Writing hub page ...');
+rmSync(tmpCD, { recursive: true, force: true });
+console.log('# Writing hub page to /hub.html (Candle Dodger serves at the apex /) ...');
 writeFileSync(
-  join(dist, 'index.html'),
+  join(dist, 'hub.html'),
   String.raw`<!doctype html>
 <html lang="en">
 <head>
@@ -112,11 +116,11 @@ writeFileSync(
       <p>Reveal safe cells to earn allocation. Flood-fills pay in one beat at $0.001 per cell.</p>
       <span class="card-tag">LOGIC &middot; 16&times;16</span>
     </a>
-    <a class="card c-cd" href="/candledodger/">
+    <a class="card c-cd" href="/">
       <div class="card-icon">&#9670;</div>
       <h2>Candle Dodger</h2>
-      <p>Dodge red price candles, catch green ones. Every second survived earns $0.005, green catches pay $0.02.</p>
-      <span class="card-tag">ENDLESS RUNNER &middot; DARK</span>
+      <p>Trading Simulator — buy low, sell high, master risk with virtual money.</p>
+      <span class="card-tag">TRADING SIMULATOR &middot; DARK</span>
     </a>
   </div>
   <p class="footer">Built with the <a href="https://github.com/flayerlabs/gamemode-sdk">Flaunch Game Mode SDK</a></p>

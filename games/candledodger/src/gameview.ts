@@ -89,12 +89,35 @@ export class TradingSimulator {
     // Initialize with some candles
     this.initCandles();
 
+    // Keep the canvas crisp when its on-screen size changes (rotating, resizing, mobile).
+    this.resize = this.resize.bind(this);
+    window.addEventListener('resize', this.resize);
+    window.addEventListener('orientationchange', this.resize);
+    // Resize once the layout has settled (fonts/layout may change viewport height).
+    requestAnimationFrame(() => this.resize());
+
     // Keyboard controls
     window.addEventListener('keydown', (e) => {
       if (e.key === 'b' || e.key === 'B') this.buy();
       if (e.key === 's' || e.key === 'S') this.sell();
       if (e.key === 'Escape') this.closePosition();
     });
+  }
+
+  /**
+   * Keep the drawing buffer crisp on any screen (esp. high-DPI / narrow mobile viewports).
+   * The renderer always works in the fixed CHART_WIDTH x CHART_HEIGHT logical space, so we
+   * render at a DPR-scaled resolution and set the transform so all drawing code is unchanged.
+   */
+  private resize() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const bw = Math.round(CHART_WIDTH * dpr);
+    const bh = Math.round(CHART_HEIGHT * dpr);
+    if (this.canvas.width !== bw || this.canvas.height !== bh) {
+      this.canvas.width = bw;
+      this.canvas.height = bh;
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
   }
 
   private initCandles() {
@@ -129,6 +152,8 @@ export class TradingSimulator {
   stop() {
     this.running = false;
     cancelAnimationFrame(this.raf);
+    window.removeEventListener('resize', this.resize);
+    window.removeEventListener('orientationchange', this.resize);
   }
 
   private tick(t: number) {
