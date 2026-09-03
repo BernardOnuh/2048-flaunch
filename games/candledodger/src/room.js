@@ -2,12 +2,12 @@ import { createMockRoom, replayMarket } from '@flayerlabs/gamemode-client';
 import { rules } from './game/rules.ts';
 
 const CONFIG = {
-  pointsPerTradeValue: 0.5,  // 0.5 points per unit of trade value
-  pointsPerPnl: 10,          // 10 points per point of net P&L
-  maxTradeValue: 50000,      // max trade value in a round
-  maxPnl: 1000,              // max net P&L (in points) the round can award
-  maxClaimTradeValue: 1000,  // max trade value per claim
-  minMsBetweenClaims: 1_000, // minimum 1 second between claims
+  pointsPerTradeValue: 1,      // 1 point per $1 of trade value (kept integer so awards are whole points)
+  pointsPerPnl: 10,            // 10 points per point of net P&L
+  maxTradeValue: 50000,        // max trade value in a round
+  maxPnl: 1000,                // max net P&L (in points) the round can award
+  maxClaimTradeValue: 1000,    // max trade value per claim
+  minMsBetweenClaims: 1_000,   // minimum 1 second between claims
 };
 
 // Dev/QA params (mock-only): ?practice=SECONDS, ?round=SECONDS.

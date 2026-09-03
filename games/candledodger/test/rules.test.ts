@@ -4,7 +4,7 @@ import type { Command } from '@flayerlabs/gamemode-spec';
 import { rules, type Config } from '../src/game/rules';
 
 const config: Config = {
-  pointsPerTradeValue: 0.5,
+  pointsPerTradeValue: 1,
   pointsPerPnl: 10,
   maxTradeValue: 50000,
   maxPnl: 1000,
@@ -29,20 +29,20 @@ describe('candledodger rules', () => {
     const r = fresh();
     r.send({ kind: 'join', player: PLAYER, seed, at: window.opensAt });
     r.send(claimAt(100, 0, 1, window.opensAt + 10)); // trade value 100
-    expect(r.pointsFor(PLAYER)).toBe(50); // 100 * 0.5 = 50
+    expect(r.pointsFor(PLAYER)).toBe(100); // 100 * 1 = 100
     r.send(claimAt(200, 500, 2, window.opensAt + 1_150)); // +200 value, +500 pnl
-    expect(r.pointsFor(PLAYER)).toBe(50 + 100 + 5000); // 5150
+    expect(r.pointsFor(PLAYER)).toBe(100 + 200 + 5000); // 5300
   });
 
   it('lets a losing trade reduce the net P&L while allocation stays monotonic', () => {
     const r = fresh();
     r.send({ kind: 'join', player: PLAYER, seed, at: window.opensAt });
-    r.send(claimAt(100, 200, 1, window.opensAt + 10)); // +50 + 2000 = 2050
-    expect(r.pointsFor(PLAYER)).toBe(2050);
+    r.send(claimAt(100, 200, 1, window.opensAt + 10)); // +100 + 2000 = 2100
+    expect(r.pointsFor(PLAYER)).toBe(2100);
     // a claim with a loss cannot go negative
-    r.send(claimAt(0, -300, 2, window.opensAt + 1_150)); // -3000 → net -950, floored at 0
+    r.send(claimAt(0, -300, 2, window.opensAt + 1_150)); // -3000 → net -900, floored at 0
     r.send(claimAt(0, -100, 1, window.opensAt + 2_250)); // floored at 0
-    expect(r.pointsFor(PLAYER)).toBe(2050); // SDK only ever accumulates non-negative awards
+    expect(r.pointsFor(PLAYER)).toBe(2100); // SDK only ever accumulates non-negative awards
   });
 
   it('refuses a claim before the window opens', () => {
@@ -59,10 +59,10 @@ describe('candledodger rules', () => {
     r.send(claimAt(100, 0, 1, window.opensAt + 10));
     const tooFast = r.send(claimAt(100, 0, 1, window.opensAt + 500)); // under 1s
     expect(tooFast).toEqual({ refuse: 'claim.too_fast' });
-    expect(r.pointsFor(PLAYER)).toBe(50);
+    expect(r.pointsFor(PLAYER)).toBe(100);
     const ok = r.send(claimAt(100, 0, 1, window.opensAt + 1_150));
     expect(ok).not.toHaveProperty('refuse');
-    expect(r.pointsFor(PLAYER)).toBe(100);
+    expect(r.pointsFor(PLAYER)).toBe(200);
   });
 
   it('rejects malformed and oversized actions at parse time', () => {
@@ -126,8 +126,8 @@ describe('candledodger rules', () => {
     ];
     for (const c of cmds) { a.send(c); b.send(c); }
     expect(a.snapshot()).toEqual(b.snapshot());
-    // +50 + (100 + 5000) = 5150; the last claim is a net loss so it adds no points
+    // +100 + (200 + 5000) = 5300; the last claim is a net loss so it adds no points
     // (awarded points never ratchet down — the SDK only accumulates non-negative awards).
-    expect(a.pointsFor(PLAYER)).toBe(5150);
+    expect(a.pointsFor(PLAYER)).toBe(5300);
   });
 });
