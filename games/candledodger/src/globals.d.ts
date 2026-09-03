@@ -4,7 +4,7 @@
 interface Window {
   __gm?: {
     room: import('@flayerlabs/gamemode-client').Room<any, any, any>;
-    claim(seconds?: number, greens?: number): Promise<any>;
+    claim(tradeValue?: number, pnl?: number, trades?: number): Promise<any>;
     resetFirstRun(): void;
   };
 }

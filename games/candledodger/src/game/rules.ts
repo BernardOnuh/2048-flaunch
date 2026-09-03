@@ -1,35 +1,32 @@
 import { defineGame, type Decision, type PlayerId, type Refusal } from '@flayerlabs/gamemode-spec';
 
 /**
- * Candle Dodger as a Game Mode — survival + green-candle rules (bounded-claim shape).
+ * Trading Simulator as a Game Mode — a trading-P&L sim with a bounded-claim shape.
  *
- * The runner (dodge / collect collisions) runs in the browser and cannot be trusted, so the
- * rules never re-simulate the run. What CAN be bounded is the claim rhythm and the ceiling:
+ * The simulator runs in the browser and cannot be trusted, so the rules never re-simulate it.
+ * What CAN be bounded is the claim rhythm, the ceiling and the deduction floor:
  *
- *  - A claim reports how far the player survived since their last tick and how many green
- *    candles they caught. Both award immediately because the run is public on screen — there
- *    is no hidden beat to leak.
- *  - Survival seconds are rate-limited by `minMsBetweenClaims` (the browser cannot report
- *    faster than real time) and each single claim can never represent more than `maxGapMs`
- *    of play. The cumulative cap `maxSeconds` stops any total above the round's playable span.
- *  - Green candles are bounded per claim by `maxGreensPerClaim` and in total by `maxGreens`,
- *    the number of green candles the round can actually spawn.
+ *  - A claim reports trade value, P&L changes, and number of trades executed.
+ *  - Claims are rate-limited by `minMsBetweenClaims`.
+ *  - The cumulative cap `maxTradeValue` stops any total above the round's playable span.
  *
- * A cheater with a console can claim, but never faster than the game can be played, never
- * more play per claim than the gap allows, and never past the round ceiling.
+ * The rules award points based on trading performance:
+ *  - Trade value awards points proportional to the trade size
+ *  - Winning trades award bonus points
+ *  - Losing trades deduct points (but never below zero)
  */
 
 export interface Config {
-  /** Allocation points per whole second survived. */
-  pointsPerSecond: number;
-  /** Allocation points per green candle caught. */
-  pointsPerGreen: number;
-  /** Max survival seconds a player can bank in the round (the survivable span). */
-  maxSeconds: number;
-  /** Total green candles the round can spawn (the bound per player). */
-  maxGreens: number;
-  /** A single claim may represent at most this much wall time. */
-  maxGapMs: number;
+  /** Allocation points per unit of trade value. */
+  pointsPerTradeValue: number;
+  /** Allocation points per point of net P&L (already net of wins/losses). */
+  pointsPerPnl: number;
+  /** Max trade value a player can bank in the round. */
+  maxTradeValue: number;
+  /** Max net P&L (in points) the round can award (the bound per player). */
+  maxPnl: number;
+  /** A single claim may represent at most this much trade value. */
+  maxClaimTradeValue: number;
   /** The fastest honest rhythm between claims, measured by play: ~1s. */
   minMsBetweenClaims: number;
 }
@@ -39,23 +36,31 @@ export interface State {
   opensAt: number;
   endsAt: number;
   over: boolean;
-  players: Record<PlayerId, { gamePoints: number; claims: number; lastClaimAt: number; seconds: number; greens: number }>;
+  players: Record<PlayerId, { 
+    gamePoints: number; 
+    claims: number; 
+    lastClaimAt: number; 
+    tradeValue: number; 
+    wins: number; 
+    losses: number;
+    pnlAccum: number;
+  }>;
 }
 
 /**
- * A claim of progress since the last tick.
- *  - `seconds` is whole seconds survived in wall time (0..maxGapMs/1000).
- *  - `greens` is how many green candles were caught on those moves (0..maxGreensPerClaim).
- * The browser screens collisions and only sends the honest numbers; the rules bound the rate.
+ * A claim of trading progress since the last tick.
+ *  - `seconds` is the trade value (in dollars).
+ *  - `greens` is the P&L multiplied by 100 (to handle decimals as integers).
+ *  - `reds` is the number of trades executed.
  */
-export type Action = { kind: 'claim'; seconds: number; greens: number };
+export type Action = { kind: 'claim'; seconds: number; greens: number; reds: number };
 
 export type Event =
   | { t: 'joined'; player: PlayerId }
-  | { t: 'claimed'; player: PlayerId; seconds: number; greens: number; at: number }
+  | { t: 'claimed'; player: PlayerId; tradeValue: number; pnl: number; trades: number; at: number }
   | { t: 'ended' };
 
-const MAX_GREENS_PER_CLAIM = 3;
+const MAX_TRADES_PER_CLAIM = 10; // Max trades per claim
 
 export const rules = defineGame<Config, State, Event, Action, PublicView, PlayerView>({
   id: 'candledodger',
@@ -63,16 +68,17 @@ export const rules = defineGame<Config, State, Event, Action, PublicView, Player
   parseAction(input): Action | null {
     if (typeof input !== 'object' || input === null) return null;
     const keys = Object.keys(input).sort().join(',');
-    if (keys !== 'greens,kind,seconds') return null;
-    const { kind, seconds, greens } = input as { kind?: unknown; seconds?: unknown; greens?: unknown };
+    if (keys !== 'greens,kind,reds,seconds') return null;
+    const { kind, seconds, greens, reds } = input as { kind?: unknown; seconds?: unknown; greens?: unknown; reds?: unknown };
     if (kind !== 'claim') return null;
-    if (typeof seconds !== 'number' || !Number.isInteger(seconds) || seconds < 0 || seconds > 60) return null;
-    if (typeof greens !== 'number' || !Number.isInteger(greens) || greens < 0 || greens > MAX_GREENS_PER_CLAIM) return null;
-    return { kind, seconds, greens };
+    if (typeof seconds !== 'number' || !Number.isInteger(seconds) || seconds < 0 || seconds > 100000) return null;
+    if (typeof greens !== 'number' || !Number.isInteger(greens) || greens < -10000 || greens > 10000) return null;
+    if (typeof reds !== 'number' || !Number.isInteger(reds) || reds < 0 || reds > MAX_TRADES_PER_CLAIM) return null;
+    return { kind, seconds, greens, reds };
   },
 
   initRound(config, seed, window) {
-    void seed; // the candle layout is visual in the browser; the rules bound claims, not re-simulate
+    void seed; // the trading simulation is visual in the browser; the rules bound claims, not re-simulate
     return { config, opensAt: window.opensAt, endsAt: window.closesAt, over: false, players: {} };
   },
 
@@ -97,28 +103,30 @@ export const rules = defineGame<Config, State, Event, Action, PublicView, Player
         if (command.at - player.lastClaimAt < state.config.minMsBetweenClaims) {
           return { refuse: 'claim.too_fast' };
         }
-        const sec = command.action.seconds;
-        const greens = command.action.greens;
-        if (sec <= 0 && greens <= 0) return { refuse: 'claim.nothing_scored' };
-        // A single claim can never represent more wall time than the gap allows.
-        if (sec * 1000 > state.config.maxGapMs) return { refuse: 'action.too_big' };
-        // Survival can't bank past the round's survivable span.
-        const secondsLeft = Math.max(0, state.config.maxSeconds - player.seconds);
-        const secondsGranted = Math.min(sec, secondsLeft);
-        const cap = state.config.maxSeconds * state.config.pointsPerSecond
-          + state.config.maxGreens * state.config.pointsPerGreen;
-        const gamePointsNow = player.gamePoints
-          + secondsGranted * state.config.pointsPerSecond
-          + greens * state.config.pointsPerGreen;
-        if (gamePointsNow > cap) return { refuse: 'claim.cap_reached' };
-        if (secondsGranted <= 0 && greens <= 0) return { refuse: 'claim.nothing_scored' };
-        return {
-          events: [{ t: 'claimed', player: command.player, seconds: secondsGranted, greens, at: command.at }],
-          awards: [{
-            player: command.player,
-            points: secondsGranted * state.config.pointsPerSecond + greens * state.config.pointsPerGreen,
-          }],
+        const tradeValue = command.action.seconds;
+        const pnl = command.action.greens;
+        const trades = command.action.reds;
+        if (tradeValue <= 0 && pnl <= 0 && trades <= 0) return { refuse: 'claim.nothing_scored' };
+        // A single claim can't exceed max trade value.
+        if (tradeValue > state.config.maxClaimTradeValue) return { refuse: 'action.too_big' };
+        // Trade value can't bank past the round's maximum.
+        const tradeValueLeft = Math.max(0, state.config.maxTradeValue - player.tradeValue);
+        const tradeValueGranted = Math.min(tradeValue, tradeValueLeft);
+        const cap = state.config.maxTradeValue * state.config.pointsPerTradeValue
+          + state.config.maxPnl * state.config.pointsPerPnl;
+        // Net: trade value adds, net P&L adds (a negative P&L already reflects losses.
+        // The game floored P&L per trade at zero P&L from the integer, but we accept the
+        // reported net and never let the running total of all players' awards go below zero.
+        const delta = tradeValueGranted * state.config.pointsPerTradeValue
+          + pnl * state.config.pointsPerPnl;
+        const netNow = Math.max(0, player.gamePoints + delta);
+        if (netNow > cap) return { refuse: 'claim.cap_reached' };
+        const awardPoints = Math.max(0, netNow - player.gamePoints);
+        const decision: Decision<Event> = {
+          events: [{ t: 'claimed', player: command.player, tradeValue: tradeValueGranted, pnl, trades, at: command.at }],
         };
+        if (awardPoints > 0) decision.awards = [{ player: command.player, points: awardPoints }];
+        return decision;
       }
     }
   },
@@ -128,20 +136,26 @@ export const rules = defineGame<Config, State, Event, Action, PublicView, Player
       case 'joined':
         return {
           ...state,
-          players: { ...state.players, [event.player]: { gamePoints: 0, claims: 0, lastClaimAt: 0, seconds: 0, greens: 0 } },
+          players: { ...state.players, [event.player]: { gamePoints: 0, claims: 0, lastClaimAt: 0, tradeValue: 0, wins: 0, losses: 0, pnlAccum: 0 } },
         };
       case 'claimed': {
-        const p = state.players[event.player] ?? { gamePoints: 0, claims: 0, lastClaimAt: 0, seconds: 0, greens: 0 };
+        const p = state.players[event.player] ?? { gamePoints: 0, claims: 0, lastClaimAt: 0, tradeValue: 0, wins: 0, losses: 0, pnlAccum: 0 };
+        const delta = event.tradeValue * state.config.pointsPerTradeValue
+          + event.pnl * state.config.pointsPerPnl;
+        const isWin = event.pnl > 0;
+        const isLoss = event.pnl < 0;
         return {
           ...state,
           players: {
             ...state.players,
             [event.player]: {
-              gamePoints: p.gamePoints + event.seconds * state.config.pointsPerSecond + event.greens * state.config.pointsPerGreen,
+              gamePoints: Math.max(0, p.gamePoints + delta),
               claims: p.claims + 1,
               lastClaimAt: event.at,
-              seconds: p.seconds + event.seconds,
-              greens: p.greens + event.greens,
+              tradeValue: p.tradeValue + event.tradeValue,
+              wins: p.wins + (isWin ? 1 : 0),
+              losses: p.losses + (isLoss ? 1 : 0),
+              pnlAccum: p.pnlAccum + event.pnl / 100, // Convert back from integer
             },
           },
         };
@@ -161,6 +175,7 @@ export const rules = defineGame<Config, State, Event, Action, PublicView, Player
           player,
           gamePoints: p.gamePoints,
           dollars: Math.floor(p.gamePoints * 0.001 * 100) / 100,
+          winRate: p.wins + p.losses > 0 ? Math.round((p.wins / (p.wins + p.losses)) * 100) : 0,
         }))
         .sort((a, b) => b.dollars - a.dollars || a.player.localeCompare(b.player)),
     };
@@ -168,14 +183,15 @@ export const rules = defineGame<Config, State, Event, Action, PublicView, Player
 
   playerView(state, player): PlayerView {
     const you = state.players[player];
-    const cap = state.config.maxSeconds * state.config.pointsPerSecond
-      + state.config.maxGreens * state.config.pointsPerGreen;
+    const cap = state.config.maxTradeValue * state.config.pointsPerTradeValue
+      + state.config.maxPnl * state.config.pointsPerPnl;
     return {
       playing: you !== undefined,
       gamePoints: you?.gamePoints ?? 0,
       pointsRemaining: Math.max(0, cap - (you?.gamePoints ?? 0)),
       cooldownUntil: (you?.lastClaimAt ?? 0) + state.config.minMsBetweenClaims,
       dollars: Math.floor((you?.gamePoints ?? 0) * 0.001 * 100) / 100,
+      winRate: you ? (you.wins + you.losses > 0 ? Math.round((you.wins / (you.wins + you.losses)) * 100) : 0) : 0,
     };
   },
 
@@ -184,10 +200,10 @@ export const rules = defineGame<Config, State, Event, Action, PublicView, Player
   },
 
   rewardBounds(config) {
-    // The game's own honest cap: survive the full span and catch every green candle.
+    // The game's own honest cap: max trade value plus max net P&L.
     return {
       maxPointsPerPlayer: Math.floor(
-        config.maxSeconds * config.pointsPerSecond + config.maxGreens * config.pointsPerGreen,
+        config.maxTradeValue * config.pointsPerTradeValue + config.maxPnl * config.pointsPerPnl,
       ),
     };
   },
@@ -197,7 +213,7 @@ export interface PublicView {
   opensAt: number;
   endsAt: number;
   over: boolean;
-  standings: { player: PlayerId; gamePoints: number; dollars: number }[];
+  standings: { player: PlayerId; gamePoints: number; dollars: number; winRate: number }[];
 }
 
 export interface PlayerView {
@@ -206,4 +222,5 @@ export interface PlayerView {
   pointsRemaining: number;
   cooldownUntil: number;
   dollars: number;
+  winRate: number;
 }
